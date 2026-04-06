@@ -198,21 +198,43 @@ Please review and merge when ready!`
   }
 
   private async markFailed(issueNumber: number, error: string): Promise<void> {
-    console.error(`❌ Marking issue #${issueNumber} as failed`);
+    console.error(`❌ Marking issue #${issueNumber} as failed: ${error}`);
 
     if (this.dryRun) return;
 
     await this.client.removeLabel(issueNumber, config.labels.implementing);
     await this.client.addLabels(issueNumber, [config.labels.failed]);
 
+    const errorHint = this.getErrorHint(error);
+
     await this.client.addComment(
       issueNumber,
       `⚠️ **Processing failed**
 
-Error: ${error}
+**Error:** ${error}
+
+${errorHint}
 
 Please review and re-open if needed.`
     );
+  }
+
+  private getErrorHint(error: string): string {
+    const lowerError = error.toLowerCase();
+    
+    if (lowerError.includes('model') || lowerError.includes('api key') || lowerError.includes('auth')) {
+      return '**Hint:** This appears to be a configuration issue. Please check that the AI model is properly configured and the API key is valid.';
+    }
+    if (lowerError.includes('timeout')) {
+      return '**Hint:** The operation timed out. The task may be too complex or the AI service may be slow. Try breaking the issue into smaller parts.';
+    }
+    if (lowerError.includes('network') || lowerError.includes('connection')) {
+      return '**Hint:** There was a network issue. Please check your internet connection and try again.';
+    }
+    if (lowerError.includes('no changes') || lowerError.includes('could not implement')) {
+      return '**Hint:** The AI could not determine what changes to make. Please provide more specific information about what files need to be changed and what the expected behavior should be.';
+    }
+    return '**Hint:** Check the agent logs for more details about what went wrong.';
   }
 
   getStats() {

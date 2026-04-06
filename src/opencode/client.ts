@@ -66,7 +66,7 @@ export class OpenCodeClient {
       } catch {}
 
       if (result.success) {
-        const changedFiles = this.detectChangedFiles();
+        const changedFiles = result.changedFiles || [];
 
         if (changedFiles.length > 0) {
           console.log(`✅ OpenCode made ${changedFiles.length} file change(s)`);
@@ -82,11 +82,14 @@ export class OpenCodeClient {
         };
       }
 
+      const errorMessage = result.error || 'Unknown error from OpenCode';
+      console.error(`❌ OpenCode failed: ${errorMessage}`);
+
       return {
         success: false,
         message: 'OpenCode failed',
-        changedFiles: [],
-        error: result.error,
+        changedFiles: result.changedFiles || [],
+        error: errorMessage,
       };
     } catch (error: any) {
       console.error('OpenCode error:', error.message);
@@ -160,7 +163,7 @@ export class OpenCodeClient {
     }
   }
 
-  private async runOpenCodeWithSDK(prompt: string, branchName: string): Promise<{ success: boolean; error?: string }> {
+  private async runOpenCodeWithSDK(prompt: string, branchName: string): Promise<{ success: boolean; error?: string; changedFiles: string[] }> {
     return new Promise(async (resolve) => {
       execSync('git fetch origin main', { cwd: this.workingDir, stdio: 'pipe' });
       try {
@@ -173,6 +176,8 @@ export class OpenCodeClient {
       emitLog(`✅ Branch ${branchName} created`);
 
       emitLog('🚀 Starting OpenCode SDK...');
+
+      const changedFiles: string[] = [];
 
       try {
         const createOpencode = SDK.createOpencode;
@@ -302,7 +307,7 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
               try {
                 result.server.close();
               } catch {}
-              resolve({ success, error: errorMsg });
+              resolve({ success, error: errorMsg, changedFiles });
             }
           }, 1000);
 
@@ -312,12 +317,12 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
           try {
             result.server.close();
           } catch {}
-          resolve({ success: false, error: errorMsg });
+          resolve({ success: false, error: errorMsg, changedFiles: [] });
         }
 
       } catch (error: any) {
         emitLog(`❌ Failed to start OpenCode SDK: ${error.message}`);
-        resolve({ success: false, error: error.message });
+        resolve({ success: false, error: error.message, changedFiles: [] });
       }
     });
   }
