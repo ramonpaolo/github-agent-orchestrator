@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build: .
+    container_name: github-agent-orchestrator
+    restart: unless-stopped
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPO=${GITHUB_REPO}
+      - GITHUB_REPO_PATH=/repo
+      - POLLING_INTERVAL=60
+      - LOG_LEVEL=info
+    volumes:
+      - ${REPO_PATH}:/repo
+      - ./logs:/app/logs
+    networks:
+      - orchestrator-net
+
+networks:
+  orchestrator-net:
+    driver: bridge
