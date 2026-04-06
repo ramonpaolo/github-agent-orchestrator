@@ -3,6 +3,7 @@ import { Issue } from '../github';
 import path from 'path';
 import fs from 'fs';
 import { EventEmitter } from 'events';
+import { config } from '../config';
 
 const SDK = require(path.join(__dirname, '..', '..', 'node_modules', '@opencode-ai', 'sdk', 'dist', 'index.js'));
 
@@ -70,6 +71,8 @@ export class OpenCodeClient {
         if (changedFiles.length > 0) {
           console.log(`✅ OpenCode made ${changedFiles.length} file change(s)`);
           changedFiles.forEach(f => console.log(`   - ${f}`));
+
+          await this.commitChanges(branchName, changedFiles);
         }
 
         return {
@@ -176,6 +179,9 @@ export class OpenCodeClient {
         const result = await createOpencode({
           port: 4096,
           hostname: '127.0.0.1',
+          config: {
+            model: config.agent.model,
+          },
         });
 
         const client = result.client;
@@ -328,6 +334,30 @@ ${issue.body}
 
 ${additionalContext ? `## Additional Context\n${additionalContext}\n` : ''}
 `;
+  }
+
+  private async commitChanges(branchName: string, changedFiles: string[]): Promise<void> {
+    try {
+      const hasChanges = execSync('git status --porcelain', {
+        cwd: this.workingDir,
+        encoding: 'utf8',
+      }).trim();
+
+      if (!hasChanges) {
+        console.log('📋 No changes to commit');
+        return;
+      }
+
+      console.log('📝 Committing changes...');
+      const filesList = changedFiles.join(' ');
+      execSync(`git add -A && git commit -m "feat(${branchName}): implement changes"`, {
+        cwd: this.workingDir,
+        stdio: 'pipe',
+      });
+      console.log('✅ Changes committed successfully');
+    } catch (error: any) {
+      console.log(`⚠️ Commit failed (may already be committed): ${error.message}`);
+    }
   }
 
   private detectChangedFiles(): string[] {
