@@ -301,7 +301,7 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
             }
             try {
               result.server.close();
-            } catch {}
+            } catch { }
           };
 
           const timeout = setTimeout(() => {
@@ -319,7 +319,7 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
               clearInterval(checkCompletion);
               clearTimeout(timeout);
               await cleanup();
-              resolve({ success, error: errorMsg, changedFiles });
+              resolve({ success, error: errorMsg, changedFiles: this.detectChangedFiles() });
             }
           }, 1000);
 
@@ -331,7 +331,7 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
           }
           try {
             result.server.close();
-          } catch {}
+          } catch { }
           resolve({ success: false, error: errorMsg, changedFiles: [] });
         }
 
@@ -382,7 +382,7 @@ ${additionalContext ? `## Additional Context\n${additionalContext}\n` : ''}
 
   private detectChangedFiles(): string[] {
     try {
-      const output = execSync('git status --porcelain', {
+      const output = execSync('git diff --name-only origin/main..HEAD', {
         cwd: this.workingDir,
         encoding: 'utf8',
       }).trim();
@@ -392,7 +392,6 @@ ${additionalContext ? `## Additional Context\n${additionalContext}\n` : ''}
       return output
         .split('\n')
         .filter(line => line.trim())
-        .map(line => line.substring(3).trim())
         .filter(file =>
           !file.includes('.opencode-prompt.md') &&
           !file.startsWith('solutions/') &&
