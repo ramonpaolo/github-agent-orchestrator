@@ -178,7 +178,7 @@ app.get('/api/tasks/:id', (req: Request, res: Response) => {
 
 app.post('/api/tasks', (req: Request, res: Response) => {
   try {
-    const { repoId, title, description, priority } = req.body;
+    const { repoId, title, description, internalDescription, priority } = req.body;
 
     if (!repoId || !title) {
       return res.status(400).json({ error: 'repoId and title are required' });
@@ -194,6 +194,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
       repoId,
       title,
       description: description || '',
+      internalDescription: internalDescription || '',
       status: 'backlog',
       priority: priority || 'medium',
     });
@@ -206,11 +207,12 @@ app.post('/api/tasks', (req: Request, res: Response) => {
 
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
   try {
-    const { title, description, status, priority } = req.body;
+    const { title, description, internalDescription, status, priority } = req.body;
 
     const updated = db.updateTask(req.params.id, {
       title,
       description,
+      internalDescription,
       status,
       priority,
     });
@@ -351,7 +353,7 @@ app.get('/api/tasks/:id', (req: Request, res: Response) => {
 // Create task
 app.post('/api/tasks', (req: Request, res: Response) => {
   try {
-    const { repoId, title, description, status, priority } = req.body;
+    const { repoId, title, description, internalDescription, status, priority } = req.body;
 
     if (!repoId || !title) {
       return res.status(400).json({ error: 'repoId and title are required' });
@@ -372,6 +374,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
       repoId,
       title,
       description: description || '',
+      internalDescription: internalDescription || '',
       status: taskStatus,
       priority: taskPriority,
     });
@@ -385,7 +388,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
 // Update task
 app.put('/api/tasks/:id', (req: Request, res: Response) => {
   try {
-    const { title, description, status, priority } = req.body;
+    const { title, description, internalDescription, status, priority } = req.body;
 
     const validStatuses: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'in_review', 'merged', 'done'];
     if (status && !validStatuses.includes(status)) {
@@ -400,6 +403,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
     const updated = db.updateTask(req.params.id, {
       title,
       description,
+      internalDescription,
       status,
       priority,
     });

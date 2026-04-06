@@ -63,7 +63,7 @@ export class OpenCodeClient {
 
       try {
         fs.unlinkSync(promptFile);
-      } catch {}
+      } catch { }
 
       if (result.success) {
         const changedFiles = result.changedFiles || [];
@@ -184,9 +184,9 @@ export class OpenCodeClient {
         const result = await createOpencode({
           port: 4096,
           hostname: '127.0.0.1',
-          config: {
-            model: config.agent.model,
-          },
+          // config: {
+          //   model: config.agent.model,
+          // },
         });
 
         const client = result.client;
@@ -230,7 +230,7 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
                 if (completed) break;
                 const props = event.properties || {};
                 const sessionId = props.sessionID;
-                
+
                 if (event.type === 'server.connected') {
                   emitLog('📡 Connected to OpenCode');
                 } else if (event.type === 'session.status') {
