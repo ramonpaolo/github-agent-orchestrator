@@ -3,6 +3,7 @@ import { Issue } from '../github';
 import path from 'path';
 import fs from 'fs';
 import { EventEmitter } from 'events';
+import { config } from '../config';
 
 const SDK = require(path.join(__dirname, '..', '..', 'node_modules', '@opencode-ai', 'sdk', 'dist', 'index.js'));
 
@@ -176,6 +177,9 @@ export class OpenCodeClient {
         const result = await createOpencode({
           port: 4096,
           hostname: '127.0.0.1',
+          config: {
+            model: config.agent.model,
+          },
         });
 
         const client = result.client;

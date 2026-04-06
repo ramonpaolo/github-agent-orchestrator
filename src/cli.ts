@@ -21,8 +21,16 @@ program
   .description('Run the orchestrator (single repo mode)')
   .option('--dry-run', 'Simulate without making changes')
   .option('-i, --interval <seconds>', 'Polling interval', config.polling.interval.toString())
+  .option('-m, --model <model>', 'AI model to use (e.g., gpt-4, claude-3)')
   .action(async (options) => {
     console.log(chalk.cyan.bold('\n🤖 GitHub Agent Orchestrator\n'));
+
+    if (options.model) {
+      config.agent.model = options.model;
+      console.log(`   Model: ${chalk.green(options.model)}`);
+    } else {
+      console.log(`   Model: ${chalk.green(config.agent.model)} (default)`);
+    }
 
     if (!validateConfig()) {
       process.exit(1);
@@ -61,8 +69,16 @@ program
   .description('Run as daemon (single repo mode)')
   .option('--dry-run', 'Simulate without making changes')
   .option('-i, --interval <seconds>', 'Polling interval', config.polling.interval.toString())
+  .option('-m, --model <model>', 'AI model to use (e.g., gpt-4, claude-3)')
   .action(async (options) => {
     console.log(chalk.cyan.bold('\n🤖 GitHub Agent Orchestrator - Daemon Mode\n'));
+
+    if (options.model) {
+      config.agent.model = options.model;
+      console.log(`   Model: ${chalk.green(options.model)}`);
+    } else {
+      console.log(`   Model: ${chalk.green(config.agent.model)} (default)`);
+    }
 
     if (!validateConfig()) {
       process.exit(1);
