@@ -316,6 +316,79 @@ class DatabaseManager {
     };
   }
 
+  getTasksByRepo(repoId: string): Task[] {
+    const stmt = this.db.prepare('SELECT * FROM tasks WHERE repoId = ? ORDER BY createdAt DESC');
+    return stmt.all(repoId) as Task[];
+  }
+
+  getTasksByStatus(status: TaskStatus): Task[] {
+    const stmt = this.db.prepare('SELECT * FROM tasks WHERE status = ? ORDER BY createdAt DESC');
+    return stmt.all(status) as Task[];
+  }
+
+  getAllTasks(): Task[] {
+    const stmt = this.db.prepare('SELECT * FROM tasks ORDER BY createdAt DESC');
+    return stmt.all() as Task[];
+  }
+
+  getTask(id: string): Task | null {
+    const stmt = this.db.prepare('SELECT * FROM tasks WHERE id = ?');
+    return stmt.get(id) as Task | null;
+  }
+
+  addTask(task: Omit<Task, 'createdAt' | 'updatedAt'>): Task {
+    const now = new Date().toISOString();
+    const stmt = this.db.prepare(`
+      INSERT INTO tasks (id, repoId, title, description, status, priority, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(task.id, task.repoId, task.title, task.description, task.status, task.priority, now, now);
+    return { ...task, createdAt: now, updatedAt: now };
+  }
+
+  updateTask(id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): boolean {
+    const task = this.getTask(id);
+    if (!task) return false;
+
+    const now = new Date().toISOString();
+    const stmt = this.db.prepare(`
+      UPDATE tasks SET 
+        title = ?,
+        description = ?,
+        status = ?,
+        priority = ?,
+        updatedAt = ?
+      WHERE id = ?
+    `);
+
+    const result = stmt.run(
+      updates.title ?? task.title,
+      updates.description ?? task.description,
+      updates.status ?? task.status,
+      updates.priority ?? task.priority,
+      now,
+      id
+    );
+
+    return result.changes > 0;
+  }
+
+  moveTask(id: string, status: TaskStatus): boolean {
+    const task = this.getTask(id);
+    if (!task) return false;
+
+    const now = new Date().toISOString();
+    const stmt = this.db.prepare('UPDATE tasks SET status = ?, updatedAt = ? WHERE id = ?');
+    const result = stmt.run(status, now, id);
+    return result.changes > 0;
+  }
+
+  deleteTask(id: string): boolean {
+    const stmt = this.db.prepare('DELETE FROM tasks WHERE id = ?');
+    const result = stmt.run(id);
+    return result.changes > 0;
+  }
+
   close(): void {
     this.db.close();
   }
