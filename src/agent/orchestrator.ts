@@ -29,13 +29,12 @@ export class IssueOrchestrator {
     const startTime = Date.now();
     emitLog(`\n🎯 Processing issue #${issue.number}: ${issue.title}`);
 
+    const mainBranch = 'main';
+
     try {
       // Step 1: Mark as in progress
       await this.markInProgress(issue.number);
 
-      // Step 2: Get current branch before OpenCode runs
-      const mainBranch = 'main';
-      
       // Ensure we're on main before starting
       if (!this.dryRun) {
         await this.client.gitCheckout(mainBranch);
@@ -97,6 +96,10 @@ export class IssueOrchestrator {
       const duration = Date.now() - startTime;
       console.log(`✅ Completed in ${duration}ms`);
 
+      if (!this.dryRun) {
+        await this.client.gitCheckout(mainBranch);
+      }
+
       return {
         issueNumber: issue.number,
         success: prResult.success,
@@ -111,6 +114,10 @@ export class IssueOrchestrator {
       await this.markFailed(issue.number, error.message);
       this.stats.processed++;
       this.stats.failed++;
+
+      if (!this.dryRun) {
+        await this.client.gitCheckout(mainBranch);
+      }
 
       return {
         issueNumber: issue.number,
