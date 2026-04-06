@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { execSync } from 'child_process';
 import { Issue, FileChange, PRResult, ProcessingResult, IssueStatus } from '../github';
 import { GitHubClient } from '../github/client';
 import { TaskExecutor } from './executor';
@@ -25,58 +26,54 @@ export class IssueOrchestrator {
       // Step 1: Mark as in progress
       await this.markInProgress(issue.number);
 
-      // Step 2: Create branch from main
-      const branchName = this.generateBranchName(issue);
-      console.log(`🌿 Creating branch: ${branchName}`);
-
+      // Step 2: Get current branch before OpenCode runs
+      const mainBranch = 'main';
+      
+      // Ensure we're on main before starting
       if (!this.dryRun) {
-        // Always start from latest main
-        if (!(await this.client.switchToMainAndCreateBranch(branchName))) {
-          throw new Error(`Failed to create branch: ${branchName}`);
-        }
+        await this.client.gitCheckout(mainBranch);
       }
 
-      // Step 3: Execute the task
-      console.log('⚙️ Executing task...');
-      const changes = await this.executor.execute(issue, this.dryRun);
+      // Step 3: Execute the task with OpenCode (which creates branch, implements, commits)
+      console.log('🤖 Executing task with OpenCode...');
+      const execResult = await this.executor.execute(issue, this.dryRun);
+      const { changes, branchName, error } = execResult;
 
-      // If no changes, agent asked for clarification
+      if (error) {
+        throw new Error(error);
+      }
+
       if (changes.length === 0) {
-        console.log('⚠️ No changes made - agent needs clarification');
+        console.log('⚠️ No changes made');
         
-        // Go back to main and cleanup
         if (!this.dryRun) {
-          await this.client.gitCheckout('main');
+          await this.client.gitCheckout(mainBranch);
         }
         
         return {
           issueNumber: issue.number,
           success: false,
-          message: 'Agent needs clarification before proceeding',
+          message: 'No changes were made',
           changes: [],
           durationMs: Date.now() - startTime,
         };
       }
 
-      console.log(`📝 Made ${changes.length} change(s)`);
-
-      // Step 4: Commit and push
-      if (!this.dryRun) {
-        console.log('📤 Committing...');
-        if (!(await this.client.gitCommit(`Fix #${issue.number}: ${issue.title}`))) {
-          throw new Error('Failed to commit changes');
-        }
-
+      // Step 4: Push the branch (created by OpenCode)
+      if (!this.dryRun && branchName) {
+        console.log(`📤 Pushing branch: ${branchName}`);
+        
+        // Push branch to remote
         if (!(await this.client.gitPush(branchName))) {
-          throw new Error('Failed to push changes');
+          throw new Error(`Failed to push branch: ${branchName}`);
         }
-
-        // Create remote branch
+        
+        // Create remote branch if needed
         await this.client.createBranch(branchName);
       }
 
       // Step 5: Create PR
-      const prResult = await this.createPR(issue, branchName, changes);
+      const prResult = await this.createPR(issue, branchName || 'unknown', changes);
 
       // Step 6: Mark as completed
       await this.markCompleted(issue.number, prResult);
@@ -118,15 +115,6 @@ export class IssueOrchestrator {
     }
   }
 
-  private generateBranchName(issue: Issue): string {
-    const cleanTitle = issue.title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .substring(0, 50);
-    return `agent/issue-${issue.number}/${cleanTitle}`;
-  }
-
   private async markInProgress(issueNumber: number): Promise<void> {
     console.log(`📌 Marking issue #${issueNumber} as in-progress`);
 
@@ -152,9 +140,6 @@ ${issue.body}
 
 ## Changes Made
 ${changedFiles || '- See implementation details'}
-
-## Testing
-<!-- TODO: Add testing notes -->
 
 ## Checklist
 - [ ] Tests added/updated
@@ -190,13 +175,7 @@ ${changedFiles || '- See implementation details'}
         issueNumber,
         `🎉 **Issue resolved!**
 
-PR created: #${prResult.prNumber}
-
-## Review Checklist
-- [ ] Code changes are correct and complete
-- [ ] Tests pass locally
-- [ ] Documentation is updated
-- [ ] No breaking changes
+PR created: #{prResult.prNumber}
 
 Please review and merge when ready!`
       );

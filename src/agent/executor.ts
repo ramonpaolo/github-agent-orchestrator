@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { Issue, FileChange } from '../github';
 import { GitHubClient } from '../github/client';
 import { runOpenCodeForIssue, OpenCodeResult } from '../opencode';
@@ -14,6 +15,8 @@ export enum ExecutionStatus {
 export interface ExecutionResult {
   status: ExecutionStatus;
   changes: FileChange[];
+  branchName?: string;
+  error?: string;
   opencodeResult?: OpenCodeResult;
   questions?: string[];
   reason?: string;
@@ -26,7 +29,7 @@ export class TaskExecutor {
     this.client = client;
   }
 
-  async execute(issue: Issue, dryRun: boolean = false): Promise<FileChange[]> {
+  async execute(issue: Issue, dryRun: boolean = false): Promise<ExecutionResult> {
     console.log(`🔧 Analyzing issue #${issue.number}...`);
 
     const analysis = this.analyzeIssue(issue);
@@ -42,16 +45,39 @@ export class TaskExecutor {
       console.log(`📁 Changed files: ${result.changedFiles.length}`);
       result.changedFiles.forEach(f => console.log(`   - ${f}`));
 
-      // Return the changed files
-      return result.changedFiles.map(file => ({
-        path: file,
-        content: '', // Content will be read from filesystem
-        operation: 'modify' as const,
-      }));
+      // Get current branch name
+      const branchName = this.getCurrentBranch(workingDir);
+      console.log(`🌿 Current branch: ${branchName}`);
+
+      // Return the changed files and branch name
+      return {
+        status: ExecutionStatus.EXECUTED,
+        changes: result.changedFiles.map(file => ({
+          path: file,
+          content: '',
+          operation: 'modify' as const,
+        })),
+        branchName,
+      };
     } else {
       console.log(`❌ OpenCode failed: ${result.error}`);
-      // Fallback to simple implementation
-      return this.implementTask(issue, analysis.taskType, dryRun);
+      return {
+        status: ExecutionStatus.CAN_EXECUTE,
+        changes: [],
+        error: result.error,
+      };
+    }
+  }
+
+  private getCurrentBranch(workingDir: string): string | undefined {
+    try {
+      const output = execSync('git branch --show-current', {
+        cwd: workingDir,
+        encoding: 'utf8',
+      }).trim();
+      return output || undefined;
+    } catch {
+      return undefined;
     }
   }
 
