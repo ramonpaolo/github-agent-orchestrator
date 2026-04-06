@@ -7,6 +7,7 @@ import { GitHubClient } from './github/client';
 import { IssueOrchestrator } from './agent/orchestrator';
 import { config, validateConfig } from './config';
 import { runner } from './runner';
+import { checkPrerequisites, printPrerequisitesCheck } from './prerequisites';
 
 const program = new Command();
 
@@ -100,9 +101,17 @@ program
   .description('Start web dashboard and multi-repo orchestrator')
   .option('-p, --port <port>', 'Port for web dashboard', '9999')
   .action(async (options) => {
+    // Check prerequisites first
+    printPrerequisitesCheck();
+    const prereqs = checkPrerequisites();
+    if (!prereqs.ok) {
+      console.log(chalk.red('❌ Cannot start - please fix the issues above.\n'));
+      process.exit(1);
+    }
+
     // Set port for web server
     process.env.PORT = options.port;
-    
+
     // Start the runner
     await runner.start();
     

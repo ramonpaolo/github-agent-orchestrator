@@ -129,6 +129,40 @@ export class GitHubClient {
     }
   }
 
+  async getComments(issueNumber: number): Promise<Array<{ id: number; body: string; user: string; createdAt: string }>> {
+    try {
+      const { data } = await this.octokit.issues.listComments({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        issue_number: issueNumber,
+        per_page: 100,
+      });
+
+      return data.map(comment => ({
+        id: comment.id,
+        body: comment.body || '',
+        user: comment.user?.login || 'unknown',
+        createdAt: comment.created_at,
+      }));
+    } catch (error) {
+      console.error(`Failed to get comments for issue #${issueNumber}:`, error);
+      return [];
+    }
+  }
+
+  async getIssueUpdatedAt(issueNumber: number): Promise<string | null> {
+    try {
+      const { data } = await this.octokit.issues.get({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        issue_number: issueNumber,
+      });
+      return data.updated_at;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async createBranch(branchName: string, baseBranch: string = 'main'): Promise<boolean> {
     try {
       const { data } = await this.octokit.git.getRef({
@@ -224,8 +258,15 @@ export class GitHubClient {
   // Local git operations
   async gitCheckout(branch: string): Promise<boolean> {
     try {
-      await this.git.checkoutLocalBranch(branch);
-      return true;
+      // First try to checkout existing branch
+      try {
+        await this.git.checkout(branch);
+        return true;
+      } catch {
+        // If checkout fails, try to create new branch
+        await this.git.checkoutLocalBranch(branch);
+        return true;
+      }
     } catch (error) {
       console.error(`Failed to checkout/create branch ${branch}:`, error);
       return false;
@@ -235,6 +276,7 @@ export class GitHubClient {
   /**
    * Switch to main branch and pull latest changes, then create a new branch from it.
    * This ensures every new branch is created from the latest main.
+   * If the branch already exists locally, it will be deleted first.
    */
   async switchToMainAndCreateBranch(newBranch: string, baseBranch: string = 'main'): Promise<boolean> {
     try {
@@ -248,6 +290,21 @@ export class GitHubClient {
       
       // Pull latest changes
       await this.git.pull('origin', baseBranch);
+      
+      // Delete local branch if it already exists (for retry scenarios)
+      const branches = await this.git.branchLocal();
+      if (branches.all.includes(newBranch)) {
+        console.log(`🗑️ Branch '${newBranch}' already exists locally, deleting it first...`);
+        await this.git.raw(['branch', '-D', newBranch]);
+      }
+      
+      // Also try to delete remote branch if it exists
+      try {
+        await this.git.raw(['push', 'origin', '--delete', newBranch]);
+        console.log(`🗑️ Deleted remote branch '${newBranch}'`);
+      } catch {
+        // Branch doesn't exist on remote, that's fine
+      }
       
       // Create and switch to new branch
       await this.git.checkoutLocalBranch(newBranch);

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Issue, FileChange } from '../github';
 import { GitHubClient } from '../github/client';
+import { runOpenCodeForIssue, OpenCodeResult } from '../opencode';
 import { config } from '../config';
 
 export enum ExecutionStatus {
@@ -13,6 +14,7 @@ export enum ExecutionStatus {
 export interface ExecutionResult {
   status: ExecutionStatus;
   changes: FileChange[];
+  opencodeResult?: OpenCodeResult;
   questions?: string[];
   reason?: string;
 }
@@ -29,19 +31,116 @@ export class TaskExecutor {
 
     const analysis = this.analyzeIssue(issue);
     console.log(`📋 Task type: ${analysis.taskType}`);
-    console.log(`📊 Confidence: ${analysis.confidence}%`);
-    console.log(`❓ Missing info: ${analysis.missingInfo.length > 0 ? analysis.missingInfo.join(', ') : 'none'}`);
+    console.log(`🤖 Sending to OpenCode...`);
 
-    // If we don't have enough info, ask questions
-    if (analysis.missingInfo.length > 0 || analysis.confidence < 50) {
-      console.log('❓ Not enough information to proceed automatically.');
-      await this.askForClarification(issue, analysis, dryRun);
-      return [];
+    // Use OpenCode to implement the task
+    const workingDir = this.client.getRepoPath();
+    const result = await runOpenCodeForIssue(issue, workingDir);
+
+    if (result.success) {
+      console.log(`✅ OpenCode completed successfully`);
+      console.log(`📁 Changed files: ${result.changedFiles.length}`);
+      result.changedFiles.forEach(f => console.log(`   - ${f}`));
+
+      // Return the changed files
+      return result.changedFiles.map(file => ({
+        path: file,
+        content: '', // Content will be read from filesystem
+        operation: 'modify' as const,
+      }));
+    } else {
+      console.log(`❌ OpenCode failed: ${result.error}`);
+      // Fallback to simple implementation
+      return this.implementTask(issue, analysis.taskType, dryRun);
+    }
+  }
+
+  /**
+   * Check if a blocked issue has received new responses from the user.
+   * Returns the user's response content if they answered, or null otherwise.
+   */
+  async checkForUserResponse(issueNumber: number): Promise<string | null> {
+    const comments = await this.client.getComments(issueNumber);
+    
+    if (comments.length === 0) return null;
+
+    // Find our last clarification comment
+    const ourComments = comments.filter(c => c.body.includes('🤖 **Agent Clarification Needed**'));
+    
+    if (ourComments.length === 0) {
+      // We never asked for clarification, maybe other bot did?
+      // Check if issue was recently updated
+      const updatedAt = await this.client.getIssueUpdatedAt(issueNumber);
+      if (updatedAt) {
+        const updated = new Date(updatedAt);
+        const now = new Date();
+        const hoursSinceUpdate = (now.getTime() - updated.getTime()) / (1000 * 60 * 60);
+        return hoursSinceUpdate < 24 ? '' : null; // Return empty string for recent updates
+      }
+      return null;
     }
 
-    // Execute based on task type
-    const changes = await this.implementTask(issue, analysis.taskType, dryRun);
-    return changes;
+    // Get the most recent comment from us
+    const ourLastComment = ourComments[ourComments.length - 1];
+    const ourCommentTime = new Date(ourLastComment.createdAt).getTime();
+
+    // Check if there's a newer comment from someone else (not a bot)
+    const newerComments = comments.filter(c => {
+      const commentTime = new Date(c.createdAt).getTime();
+      const isNewer = commentTime > ourCommentTime;
+      const isNotOurs = c.user !== 'github-actions[bot]' && !c.user.includes('bot');
+      return isNewer && isNotOurs;
+    });
+
+    if (newerComments.length > 0) {
+      console.log(`✅ User responded! Found ${newerComments.length} new comment(s)`);
+      // Return all user responses combined
+      return newerComments.map(c => c.body).join('\n\n---\n\n');
+    }
+
+    return null;
+  }
+
+  /**
+   * Get issue with full context including user comments.
+   * This combines the original issue body with relevant user responses.
+   */
+  async getIssueWithContext(issueNumber: number): Promise<Issue | null> {
+    const issue = await this.client.getIssue(issueNumber);
+    if (!issue) return null;
+
+    const comments = await this.client.getComments(issueNumber);
+    const ourComments = comments.filter(c => c.body.includes('🤖 **Agent Clarification Needed**'));
+    
+    if (ourComments.length === 0) {
+      return issue; // No clarification was asked, return as is
+    }
+
+    // Find our last clarification comment
+    const ourLastComment = ourComments[ourComments.length - 1];
+    const ourCommentTime = new Date(ourLastComment.createdAt).getTime();
+
+    // Get user responses after our clarification
+    const userResponses = comments.filter(c => {
+      const commentTime = new Date(c.createdAt).getTime();
+      const isNewer = commentTime > ourCommentTime;
+      const isNotOurs = c.user !== 'github-actions[bot]' && !c.user.includes('bot');
+      return isNewer && isNotOurs;
+    });
+
+    if (userResponses.length > 0) {
+      // Append user responses to the issue body
+      const contextAppendix = userResponses
+        .map(c => `\n\n## Additional Context from @${c.user}:\n\n${c.body}`)
+        .join('');
+      
+      return {
+        ...issue,
+        body: issue.body + contextAppendix
+      };
+    }
+
+    return issue;
   }
 
   private analyzeIssue(issue: Issue): {
