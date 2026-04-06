@@ -26,6 +26,7 @@ export interface OpenCodeResult {
 
 export class OpenCodeClient {
   private workingDir: string;
+  private createdSessions: Set<string> = new Set();
 
   constructor(workingDir: string) {
     this.workingDir = workingDir;
@@ -216,10 +217,14 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
         let completed = false;
         let success = false;
         let errorMsg: string | undefined;
+        let sessionId: string | undefined;
 
         try {
           const session = await client.session.create({});
-          const sessionId = session.data?.id;
+          sessionId = session.data?.id;
+          if (sessionId) {
+            this.createdSessions.add(sessionId);
+          }
           emitLog(`📡 Session created: ${sessionId}`);
 
           const events = await client.event.subscribe({ path: { id: sessionId } });
@@ -290,23 +295,30 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
             }
           });
 
+          const cleanup = async () => {
+            if (sessionId) {
+              await this.deleteSession(client, sessionId);
+            }
+            try {
+              result.server.close();
+            } catch {}
+          };
+
           const timeout = setTimeout(() => {
             if (!completed) {
               completed = true;
               success = false;
               errorMsg = 'Timeout';
               emitLog('❌ OpenCode timed out after 15 minutes');
-              result.server.close();
+              cleanup();
             }
           }, 15 * 60 * 1000);
 
-          const checkCompletion = setInterval(() => {
+          const checkCompletion = setInterval(async () => {
             if (completed) {
               clearInterval(checkCompletion);
               clearTimeout(timeout);
-              try {
-                result.server.close();
-              } catch {}
+              await cleanup();
               resolve({ success, error: errorMsg, changedFiles });
             }
           }, 1000);
@@ -314,6 +326,9 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
         } catch (error: any) {
           emitLog(`❌ OpenCode error: ${error.message}`);
           errorMsg = error.message;
+          if (sessionId) {
+            await this.deleteSession(client, sessionId);
+          }
           try {
             result.server.close();
           } catch {}
@@ -385,6 +400,22 @@ ${additionalContext ? `## Additional Context\n${additionalContext}\n` : ''}
         );
     } catch {
       return [];
+    }
+  }
+
+  private async deleteSession(client: any, sessionId: string): Promise<void> {
+    try {
+      await client.session.delete({ path: { id: sessionId } });
+      this.createdSessions.delete(sessionId);
+      emitLog(`🗑️ Session deleted: ${sessionId}`);
+    } catch (error: any) {
+      emitLog(`⚠️ Failed to delete session ${sessionId}: ${error.message}`);
+    }
+  }
+
+  async deleteAllSessions(client: any): Promise<void> {
+    for (const sessionId of this.createdSessions) {
+      await this.deleteSession(client, sessionId);
     }
   }
 }
