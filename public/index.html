@@ -24,6 +24,209 @@
     }
     
     header h1 { color: #58a6ff; }
+    
+    .session-banner {
+      background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+      border: 1px solid #4a5568;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+    
+    .session-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .session-spinner {
+      font-size: 24px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .session-title {
+      color: #f0f6fc;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .session-details {
+      color: #a0aec0;
+      font-size: 14px;
+    }
+    
+    .session-progress {
+      color: #68d391;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .session-banner.hidden { display: none; }
+    
+    /* OpenCode Live View */
+    .opencode-live-container {
+      background: #161b22;
+      border: 2px solid #f85149;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .opencode-live-header {
+      background: #0d1117;
+      padding: 10px 15px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .opencode-live-title {
+      color: #f85149;
+      font-size: 14px;
+      font-weight: 600;
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .opencode-live-body {
+      background: #0d1117;
+    }
+    
+    .opencode-live-body iframe {
+      background: #0d1117;
+    }
+    
+    /* OpenCode Live View */
+    .opencode-live-container {
+      background: #161b22;
+      border: 2px solid #f85149;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .opencode-live-header {
+      background: #0d1117;
+      padding: 10px 15px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .opencode-live-title {
+      color: #f85149;
+      font-size: 14px;
+      font-weight: 600;
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .opencode-live-body {
+      background: #0d1117;
+    }
+    
+    .opencode-live-container.hidden { display: none; }
+    
+    .opencode-live-body iframe {
+      background: #0d1117;
+    }
+    
+    /* Terminal */
+    .terminal-container {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .terminal-header {
+      background: #161b22;
+      padding: 10px 15px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .terminal-title {
+      color: #c9d1d9;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .terminal-body {
+      padding: 15px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
+      color: #c9d1d9;
+    }
+    
+    .terminal-line {
+      margin-bottom: 4px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    .terminal-line.error { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.1); padding: 2px 5px; border-radius: 3px; }
+    .terminal-line.success { color: #3fb950; font-weight: 500; }
+    .terminal-line.info { color: #58a6ff; }
+    .terminal-line.thinking { color: #d29922; font-style: italic; }
+    .terminal-line.warning { color: #d29922; background: rgba(210, 153, 34, 0.1); padding: 2px 5px; border-radius: 3px; }
+    .terminal-line.running { color: #79c0ff; }
+    
+    .terminal-empty {
+      color: #6e7681;
+      font-style: italic;
+    }
+    
+    .terminal-toggle {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .terminal-toggle:hover {
+      background: #30363d;
+    }
+    
+    .terminal-line:has(~ .thinking) {
+      color: #d29922;
+    }
     header p { color: #8b949e; margin-top: 5px; }
     
     .btn {
@@ -285,6 +488,200 @@
       background: #238636;
       color: white;
     }
+
+    /* Kanban Board */
+    .kanban-board {
+      display: flex;
+      gap: 15px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+      min-height: 500px;
+    }
+
+    .kanban-column {
+      flex: 0 0 280px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 280px);
+    }
+
+    .kanban-column-header {
+      padding: 12px 15px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kanban-column-title {
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kanban-column-count {
+      background: #30363d;
+      color: #8b949e;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .kanban-column-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .kanban-card {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .kanban-card:hover {
+      border-color: #58a6ff;
+      transform: translateY(-2px);
+    }
+
+    .kanban-card-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #f0f6fc;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .kanban-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kanban-card-priority {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .priority-high {
+      background: rgba(248, 81, 73, 0.2);
+      color: #f85149;
+    }
+
+    .priority-medium {
+      background: rgba(210, 153, 34, 0.2);
+      color: #d29922;
+    }
+
+    .priority-low {
+      background: rgba(63, 185, 80, 0.2);
+      color: #3fb950;
+    }
+
+    .kanban-card-repo {
+      font-size: 11px;
+      color: #58a6ff;
+    }
+
+    .kanban-empty {
+      text-align: center;
+      padding: 20px;
+      color: #6e7681;
+      font-size: 13px;
+    }
+
+    .kanban-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .kanban-btn {
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .kanban-btn:hover {
+      background: #30363d;
+      color: #c9d1d9;
+    }
+
+    .kanban-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .column-backlog .kanban-column-header { color: #8b949e; }
+    .column-todo .kanban-column-header { color: #58a6ff; }
+    .column-in_progress .kanban-column-header { color: #d29922; }
+    .column-in_review .kanban-column-header { color: #a371f7; }
+    .column-merged .kanban-column-header { color: #3fb950; }
+    .column-done .kanban-column-header { color: #3fb950; }
+
+    .column-backlog .kanban-column { border-top: 3px solid #6e7681; }
+    .column-todo .kanban-column { border-top: 3px solid #58a6ff; }
+    .column-in_progress .kanban-column { border-top: 3px solid #d29922; }
+    .column-in_review .kanban-column { border-top: 3px solid #a371f7; }
+    .column-merged .kanban-column { border-top: 3px solid #3fb950; }
+    .column-done .kanban-column { border-top: 3px solid #3fb950; }
+
+    /* Task Modal */
+    .task-form-group {
+      margin-bottom: 15px;
+    }
+
+    .task-form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #8b949e;
+    }
+
+    .task-form-group input,
+    .task-form-group textarea,
+    .task-form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .task-form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .task-form-group input:focus,
+    .task-form-group textarea:focus,
+    .task-form-group select:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    .task-form-group select {
+      cursor: pointer;
+    }
     
     .hidden { display: none !important; }
     
@@ -315,9 +712,54 @@
     </div>
   </header>
 
+  <!-- Session Status Banner -->
+  <div id="session-banner" class="session-banner hidden">
+    <div class="session-content">
+      <div class="session-info">
+        <span class="session-spinner">⚡</span>
+        <span class="session-title">Agent is working...</span>
+        <span id="session-details" class="session-details"></span>
+      </div>
+      <div class="session-progress" id="session-progress">Initializing</div>
+    </div>
+  </div>
+
+  <!-- OpenCode Live View -->
+  <div id="opencode-live-container" class="container">
+    <div class="opencode-live-container">
+      <div class="opencode-live-header">
+        <span class="opencode-live-title">🔴 LIVE - OpenCode Execution</span>
+        <div>
+          <a href="http://localhost:4096" target="_blank" class="terminal-toggle" style="text-decoration: none;">Open ↗️</a>
+          <button class="terminal-toggle" onclick="toggleOpenCodeLive()" id="opencode-live-toggle-btn">Hide</button>
+        </div>
+      </div>
+      <div class="opencode-live-body">
+        <iframe id="opencode-iframe" src="http://localhost:4096" width="100%" height="500" frameborder="0"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal -->
+  <div id="terminal-container" class="container">
+    <div class="terminal-container" style="border: 2px solid #f85149;">
+      <div class="terminal-header">
+        <span class="terminal-title">🤖 Execution Logs</span>
+        <div>
+          <button class="terminal-toggle" onclick="clearTerminal()">Clear</button>
+          <button class="terminal-toggle" onclick="toggleTerminal()" id="terminal-toggle-btn">Hide</button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <div class="terminal-empty">Waiting for agent activity...</div>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
     <div class="tabs">
       <button class="tab active" data-tab="repos">Repositories</button>
+      <button class="tab" data-tab="tasks">Tasks</button>
       <button class="tab" data-tab="logs">Activity Logs</button>
     </div>
 
@@ -347,6 +789,23 @@
         </div>
         <div id="logs-container" class="logs-container"></div>
       </div>
+    </div>
+
+    <!-- Tasks Tab -->
+    <div id="tab-tasks" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Task Board</span>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="task-repo-filter" onchange="loadTasks()" style="padding: 8px 12px; background: #21262d; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 14px;">
+              <option value="">All Repositories</option>
+            </select>
+            <button class="btn btn-primary" onclick="openTaskModal()">+ Create Task</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban-board" id="kanban-board"></div>
     </div>
   </main>
 
@@ -390,6 +849,45 @@
     </div>
   </div>
 
+  <!-- Task Modal -->
+  <div id="task-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 600px;">
+      <h2 id="task-modal-title">Create Task</h2>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+        
+        <div class="task-form-group">
+          <label>Repository</label>
+          <select id="task-repo" required></select>
+        </div>
+        
+        <div class="task-form-group">
+          <label>Title</label>
+          <input type="text" id="task-title" placeholder="Task title" required>
+        </div>
+        
+        <div class="task-form-group">
+          <label>Description</label>
+          <textarea id="task-description" placeholder="Describe the task..."></textarea>
+        </div>
+        
+        <div class="task-form-group">
+          <label>Priority</label>
+          <select id="task-priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div id="delete-modal" class="modal-overlay">
     <div class="modal">
@@ -411,12 +909,30 @@
   <script>
     const API = '/api';
     let repos = [];
+    let tasks = [];
     let deleteRepoId = null;
+    let deleteTaskId = null;
+
+    const COLUMNS = [
+      { id: 'backlog', label: 'Backlog', icon: '📥' },
+      { id: 'todo', label: 'A Fazer', icon: '📋' },
+      { id: 'in_progress', label: 'Em Andamento', icon: '🔨' },
+      { id: 'in_review', label: 'Em Code Review', icon: '👀' },
+      { id: 'merged', label: 'Mergeado', icon: '🔀' },
+      { id: 'done', label: 'Concluído', icon: '✅' }
+    ];
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
       loadRepos();
       loadLogs();
+      loadSessionStatus();
+      
+      // Connect to terminal SSE
+      connectTerminal();
+      
+      // Poll session status every 2 seconds
+      setInterval(loadSessionStatus, 2000);
       
       // Tab switching
       document.querySelectorAll('.tab').forEach(tab => {
@@ -426,10 +942,174 @@
           
           const tabId = tab.dataset.tab;
           document.getElementById('tab-repos').classList.toggle('hidden', tabId !== 'repos');
+          document.getElementById('tab-tasks').classList.toggle('hidden', tabId !== 'tasks');
           document.getElementById('tab-logs').classList.toggle('hidden', tabId !== 'logs');
+          
+          if (tabId === 'tasks') {
+            loadTasks();
+          }
         });
       });
     });
+
+    // Load session status
+    async function loadSessionStatus() {
+      try {
+        const res = await fetch(`${API}/session`);
+        const session = await res.json();
+        
+        const banner = document.getElementById('session-banner');
+        const details = document.getElementById('session-details');
+        const progress = document.getElementById('session-progress');
+        
+        if (session.active) {
+          banner.classList.remove('hidden');
+          if (!opencodeSessionStarted) {
+            showOpenCodeLive();
+          }
+          
+          // Format elapsed time
+          let elapsed = '';
+          if (session.startedAt) {
+            const start = new Date(session.startedAt);
+            const now = new Date();
+            const diff = Math.floor((now - start) / 1000);
+            const mins = Math.floor(diff / 60);
+            const secs = diff % 60;
+            elapsed = ` (${mins}:${secs.toString().padStart(2, '0')})`;
+          }
+          
+          details.textContent = `#${session.issueNumber} - ${session.issueTitle}${elapsed}`;
+          progress.textContent = session.progress || 'Processing...';
+          
+          // Color based on status
+          if (session.progress?.includes('Failed') || session.progress?.includes('Error')) {
+            progress.style.color = '#fc8181';
+          } else if (session.progress?.includes('Completed')) {
+            progress.style.color = '#68d391';
+          } else {
+            progress.style.color = '#68d391';
+          }
+        } else {
+          banner.classList.add('hidden');
+        }
+      } catch (error) {
+        // Silently fail - session endpoint might not be available
+      }
+    }
+
+    // Terminal / SSE connection
+    let eventSource = null;
+    let terminalLines = [];
+    let terminalMinimized = false;
+    let opencodeLiveMinimized = false;
+    let opencodeSessionStarted = false;
+
+    function connectTerminal() {
+      if (eventSource) {
+        eventSource.close();
+      }
+      
+      eventSource = new EventSource(`${API}/logs/stream`);
+      
+      eventSource.onmessage = (event) => {
+        if (event.data === '[heartbeat]') return;
+        addTerminalLine(event.data);
+      };
+      
+      eventSource.onerror = () => {
+        // Reconnect after 5 seconds
+        setTimeout(connectTerminal, 5000);
+      };
+    }
+
+    function addTerminalLine(text) {
+      if (!text || text.trim() === '') return;
+      
+      const terminal = document.getElementById('terminal-body');
+      const emptyMsg = terminal.querySelector('.terminal-empty');
+      if (emptyMsg) emptyMsg.remove();
+      
+      // Determine line type
+      let lineClass = '';
+      let prefix = '';
+      
+      if (text.includes('❌') || text.includes('error') || text.includes('Error') || text.includes('FAILED') || text.includes('failed')) {
+        lineClass = 'error';
+        prefix = '🔴 ';
+      } else if (text.includes('✅') || text.includes('success') || text.includes('Success') || text.includes('DONE') || text.includes('Completed')) {
+        lineClass = 'success';
+        prefix = '🟢 ';
+      } else if (text.includes('⚠️') || text.includes('WARN') || text.includes('warning')) {
+        lineClass = 'warning';
+        prefix = '🟡 ';
+      } else if (text.includes('🚀') || text.includes('🌿') || text.includes('⚡') || text.includes('Starting') || text.includes('started')) {
+        lineClass = 'info';
+        prefix = '🔵 ';
+      } else if (text.includes('🤔') || text.includes('thinking') || text.includes('Thinking')) {
+        lineClass = 'thinking';
+        prefix = '🟠 ';
+      } else if (text.includes('⚙️') || text.includes('Running') || text.includes('running')) {
+        lineClass = 'running';
+        prefix = '🔵 ';
+      } else if (text.includes('🔧')) {
+        lineClass = 'info';
+        prefix = '🔵 ';
+      }
+      
+      const line = document.createElement('div');
+      line.className = `terminal-line ${lineClass}`;
+      line.textContent = prefix + text;
+      terminal.appendChild(line);
+      
+      // Auto-scroll to bottom
+      terminal.scrollTop = terminal.scrollHeight;
+      
+      // Store in memory
+      terminalLines.push(text);
+    }
+
+    function clearTerminal() {
+      const terminal = document.getElementById('terminal-body');
+      terminal.innerHTML = '<div class="terminal-empty">Waiting for agent activity...</div>';
+      terminalLines = [];
+      
+      // Clear on server
+      try {
+        fetch(`${API}/logs/clear`, { method: 'POST' });
+      } catch {}
+    }
+
+    function toggleTerminal() {
+      const terminal = document.getElementById('terminal-container');
+      const btn = document.getElementById('terminal-toggle-btn');
+      
+      terminalMinimized = !terminalMinimized;
+      terminal.style.display = terminalMinimized ? 'none' : 'block';
+      btn.textContent = terminalMinimized ? 'Show' : 'Hide';
+    }
+
+    function toggleOpenCodeLive() {
+      const container = document.getElementById('opencode-live-container');
+      const btn = document.getElementById('opencode-live-toggle-btn');
+      
+      opencodeLiveMinimized = !opencodeLiveMinimized;
+      container.style.display = opencodeLiveMinimized ? 'none' : 'block';
+      btn.textContent = opencodeLiveMinimized ? 'Show Live' : 'Hide';
+    }
+
+    function showOpenCodeLive() {
+      const container = document.getElementById('opencode-live-container');
+      container.style.display = 'block';
+      opencodeLiveMinimized = false;
+      document.getElementById('opencode-live-toggle-btn').textContent = 'Hide';
+      opencodeSessionStarted = true;
+    }
+
+    function hideOpenCodeLive() {
+      const container = document.getElementById('opencode-live-container');
+      container.style.display = 'none';
+    }
 
     // Load repositories
     async function loadRepos() {
@@ -437,6 +1117,7 @@
         const res = await fetch(`${API}/repos`);
         repos = await res.json();
         renderRepos();
+        populateTaskRepoSelect();
       } catch (error) {
         showToast('Failed to load repositories', true);
       }
@@ -607,6 +1288,175 @@
       document.querySelector('[data-tab="logs"]').click();
       loadLogs(repoId);
     }
+
+    // Task functions
+    async function loadTasks() {
+      try {
+        const repoFilter = document.getElementById('task-repo-filter').value;
+        let url = `${API}/tasks`;
+        if (repoFilter) {
+          url += `?repoId=${repoFilter}`;
+        }
+        const res = await fetch(url);
+        tasks = await res.json();
+        renderTasks();
+        populateTaskRepoSelect();
+      } catch (error) {
+        showToast('Failed to load tasks', true);
+      }
+    }
+
+    function renderTasks() {
+      const board = document.getElementById('kanban-board');
+      
+      board.innerHTML = COLUMNS.map(col => {
+        const columnTasks = tasks.filter(t => t.status === col.id);
+        const repoMap = {};
+        repos.forEach(r => repoMap[r.id] = r.name);
+        
+        return `
+          <div class="column-${col.id}">
+            <div class="kanban-column">
+              <div class="kanban-column-header">
+                <span class="kanban-column-title">
+                  ${col.icon} ${col.label}
+                  <span class="kanban-column-count">${columnTasks.length}</span>
+                </span>
+              </div>
+              <div class="kanban-column-body">
+                ${columnTasks.length === 0 ? '<div class="kanban-empty">No tasks</div>' : ''}
+                ${columnTasks.map(task => `
+                  <div class="kanban-card" onclick="editTask('${task.id}')">
+                    <div class="kanban-card-title">${escapeHtml(task.title)}</div>
+                    <div class="kanban-card-meta">
+                      <span class="kanban-card-priority priority-${task.priority}">${task.priority}</span>
+                      <span class="kanban-card-repo">${escapeHtml(repoMap[task.repoId] || 'Unknown')}</span>
+                    </div>
+                    <div class="kanban-card-actions" style="margin-top: 8px; display: flex; gap: 5px;" onclick="event.stopPropagation()">
+                      <button class="kanban-btn" onclick="deleteTask('${task.id}')" style="color: #f85149;">Delete</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              ${col.id !== 'backlog' ? `
+                <div style="padding: 10px; border-top: 1px solid #30363d;">
+                  <button class="kanban-btn" onclick="moveTaskToColumn('${col.id}')" ${tasks.filter(t => t.status === 'todo').length === 0 ? 'disabled' : ''}>
+                    ← Move task from "A Fazer"
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteTask(taskId) {
+      if (!confirm('Are you sure you want to delete this task?')) return;
+      
+      try {
+        await fetch(`${API}/tasks/${taskId}`, { method: 'DELETE' });
+        showToast('Task deleted');
+        loadTasks();
+      } catch (error) {
+        showToast('Failed to delete task', true);
+      }
+    }
+
+    function populateTaskRepoSelect() {
+      const filterSelect = document.getElementById('task-repo-filter');
+      const formSelect = document.getElementById('task-repo');
+      
+      const optionsHtml = '<option value="">All Repositories</option>' + 
+        repos.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+      filterSelect.innerHTML = optionsHtml;
+      
+      const formOptionsHtml = repos.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+      formSelect.innerHTML = formOptionsHtml;
+    }
+
+    function openTaskModal(taskId = null) {
+      document.getElementById('task-modal-title').textContent = taskId ? 'Edit Task' : 'Create Task';
+      document.getElementById('task-form').reset();
+      document.getElementById('task-id').value = taskId || '';
+      
+      if (taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          document.getElementById('task-id').value = task.id;
+          document.getElementById('task-repo').value = task.repoId;
+          document.getElementById('task-title').value = task.title;
+          document.getElementById('task-description').value = task.description || '';
+          document.getElementById('task-priority').value = task.priority;
+        }
+      }
+      
+      document.getElementById('task-modal').classList.add('active');
+    }
+
+    function editTask(taskId) {
+      openTaskModal(taskId);
+    }
+
+    function closeTaskModal() {
+      document.getElementById('task-modal').classList.remove('active');
+    }
+
+    async function moveTaskToColumn(newStatus) {
+      const todoTasks = tasks.filter(t => t.status === 'todo' && newStatus !== 'todo');
+      if (todoTasks.length === 0) {
+        showToast('No tasks in "A Fazer" to move', true);
+        return;
+      }
+      
+      const task = todoTasks[0];
+      
+      try {
+        await fetch(`${API}/tasks/${task.id}/move`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        showToast(`Task moved to ${COLUMNS.find(c => c.id === newStatus)?.label}`);
+        loadTasks();
+      } catch (error) {
+        showToast('Failed to move task', true);
+      }
+    }
+
+    document.getElementById('task-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('task-id').value;
+      const data = {
+        repoId: document.getElementById('task-repo').value,
+        title: document.getElementById('task-title').value,
+        description: document.getElementById('task-description').value,
+        priority: document.getElementById('task-priority').value
+      };
+      
+      try {
+        if (id) {
+          await fetch(`${API}/tasks/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          showToast('Task updated');
+        } else {
+          await fetch(`${API}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          showToast('Task created');
+        }
+        closeTaskModal();
+        loadTasks();
+      } catch (error) {
+        showToast(error.message || 'Failed to save task', true);
+      }
+    });
 
     // Load logs
     async function loadLogs(repoId = null) {
