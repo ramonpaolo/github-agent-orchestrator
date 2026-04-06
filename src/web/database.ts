@@ -30,6 +30,7 @@ export interface Task {
   repoId: string;
   title: string;
   description: string;
+  internalDescription: string;
   status: TaskStatus;
   priority: 'low' | 'medium' | 'high';
   createdAt: string;
@@ -84,6 +85,7 @@ class DatabaseManager {
         repoId TEXT NOT NULL,
         title TEXT NOT NULL,
         description TEXT DEFAULT '',
+        internalDescription TEXT DEFAULT '',
         status TEXT DEFAULT 'backlog',
         priority TEXT DEFAULT 'medium',
         createdAt TEXT NOT NULL,
@@ -235,8 +237,8 @@ class DatabaseManager {
   addTask(task: Omit<Task, 'createdAt' | 'updatedAt'>): Task {
     const now = new Date().toISOString();
     const stmt = this.db.prepare(`
-      INSERT INTO tasks (id, repoId, title, description, status, priority, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO tasks (id, repoId, title, description, internalDescription, status, priority, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     stmt.run(
@@ -244,6 +246,7 @@ class DatabaseManager {
       task.repoId,
       task.title,
       task.description,
+      task.internalDescription || '',
       task.status,
       task.priority,
       now,
@@ -262,6 +265,7 @@ class DatabaseManager {
       UPDATE tasks SET 
         title = ?,
         description = ?,
+        internalDescription = ?,
         status = ?,
         priority = ?,
         updatedAt = ?
@@ -271,6 +275,7 @@ class DatabaseManager {
     const result = stmt.run(
       updates.title ?? task.title,
       updates.description ?? task.description,
+      updates.internalDescription ?? task.internalDescription,
       updates.status ?? task.status,
       updates.priority ?? task.priority,
       now,
