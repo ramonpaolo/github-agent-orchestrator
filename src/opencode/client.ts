@@ -101,6 +101,8 @@ export class OpenCodeClient {
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
       .substring(0, 50);
 
     let prefix = 'feat';

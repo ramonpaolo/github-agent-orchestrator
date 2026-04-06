@@ -1333,18 +1333,16 @@
                       <span class="kanban-card-repo">${escapeHtml(repoMap[task.repoId] || 'Unknown')}</span>
                     </div>
                     <div class="kanban-card-actions" style="margin-top: 8px; display: flex; gap: 5px;" onclick="event.stopPropagation()">
+                      <select class="kanban-btn" style="background: #238636; color: white; border: none; cursor: pointer;" onchange="if(this.value) moveTaskToColumn('${task.id}', this.value); this.value='';">
+                        <option value="">Move to...</option>
+                        ${COLUMNS.filter(c => c.id !== '${col.id}').map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
+                      </select>
                       <button class="kanban-btn" onclick="deleteTask('${task.id}')" style="color: #f85149;">Delete</button>
                     </div>
                   </div>
                 `).join('')}
               </div>
-              ${col.id !== 'backlog' ? `
-                <div style="padding: 10px; border-top: 1px solid #30363d;">
-                  <button class="kanban-btn" onclick="moveTaskToColumn('${col.id}')" ${tasks.filter(t => t.status === 'todo').length === 0 ? 'disabled' : ''}>
-                    ← Move task from "A Fazer"
-                  </button>
-                </div>
-              ` : ''}
+
             </div>
           </div>
         `;
@@ -1402,17 +1400,9 @@
       document.getElementById('task-modal').classList.remove('active');
     }
 
-    async function moveTaskToColumn(newStatus) {
-      const todoTasks = tasks.filter(t => t.status === 'todo' && newStatus !== 'todo');
-      if (todoTasks.length === 0) {
-        showToast('No tasks in "A Fazer" to move', true);
-        return;
-      }
-      
-      const task = todoTasks[0];
-      
+    async function moveTaskToColumn(taskId, newStatus) {
       try {
-        await fetch(`${API}/tasks/${task.id}/move`, {
+        await fetch(`${API}/tasks/${taskId}/move`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus })
