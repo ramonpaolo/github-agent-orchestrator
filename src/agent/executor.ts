@@ -36,7 +36,6 @@ export class TaskExecutor {
     console.log(`📋 Task type: ${analysis.taskType}`);
     console.log(`🤖 Sending to OpenCode...`);
 
-    // Use OpenCode to implement the task
     const workingDir = this.client.getRepoPath();
     const result = await runOpenCodeForIssue(issue, workingDir);
 
@@ -45,11 +44,18 @@ export class TaskExecutor {
       console.log(`📁 Changed files: ${result.changedFiles.length}`);
       result.changedFiles.forEach(f => console.log(`   - ${f}`));
 
-      // Get current branch name
+      if (result.changedFiles.length === 0) {
+        console.log(`❌ OpenCode completed but made no changes - the issue may lack sufficient details`);
+        return {
+          status: ExecutionStatus.CAN_EXECUTE,
+          changes: [],
+          error: 'OpenCode completed but made no file changes. The issue may lack sufficient information (file locations, expected behavior, steps to reproduce, etc.)',
+        };
+      }
+
       const branchName = this.getCurrentBranch(workingDir);
       console.log(`🌿 Current branch: ${branchName}`);
 
-      // Return the changed files and branch name
       return {
         status: ExecutionStatus.EXECUTED,
         changes: result.changedFiles.map(file => ({
@@ -64,7 +70,7 @@ export class TaskExecutor {
       return {
         status: ExecutionStatus.CAN_EXECUTE,
         changes: [],
-        error: result.error,
+        error: result.error || 'Unknown OpenCode error',
       };
     }
   }
