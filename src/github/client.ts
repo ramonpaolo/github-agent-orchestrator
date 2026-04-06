@@ -129,6 +129,22 @@ export class GitHubClient {
     }
   }
 
+  async createIssue(title: string, body: string, labels?: string[]): Promise<number | null> {
+    try {
+      const { data } = await this.octokit.issues.create({
+        owner: this.repoOwner,
+        repo: this.repoName,
+        title,
+        body,
+        labels,
+      });
+      return data.number;
+    } catch (error) {
+      console.error(`Failed to create issue "${title}":`, error);
+      return null;
+    }
+  }
+
   async getComments(issueNumber: number): Promise<Array<{ id: number; body: string; user: string; createdAt: string }>> {
     try {
       const { data } = await this.octokit.issues.listComments({

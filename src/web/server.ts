@@ -5,6 +5,8 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { db, ManagedRepo, Task, TaskStatus } from './database';
 import { getLogEmitter } from '../opencode/client';
+import { GitHubClient } from '../github/client';
+import { config } from '../config';
 
 // Get log emitter
 const logEmitter = getLogEmitter();
@@ -223,7 +225,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
   }
 });
 
-app.patch('/api/tasks/:id/move', (req: Request, res: Response) => {
+app.patch('/api/tasks/:id/move', async (req: Request, res: Response) => {
   try {
     const { status } = req.body;
 
@@ -236,9 +238,37 @@ app.patch('/api/tasks/:id/move', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    const task = db.getTask(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const previousStatus = task.status;
     const moved = db.moveTask(req.params.id, status);
     if (!moved) {
       return res.status(404).json({ error: 'Task not found' });
+    }
+
+    if (status === 'todo' && previousStatus !== 'todo') {
+      const repo = db.getRepo(task.repoId);
+      if (repo && config.github.token) {
+        try {
+          const client = new GitHubClient(config.github.token, repo.githubRepo, repo.localPath);
+          const issueBody = task.description 
+            ? `${task.description}\n\n---\n*Created from task management system*`
+            : `*Created from task management system*`;
+          const issueNumber = await client.createIssue(
+            task.title,
+            issueBody,
+            [config.labels.ready]
+          );
+          if (issueNumber) {
+            console.log(`Created GitHub issue #${issueNumber} for task "${task.title}"`);
+          }
+        } catch (err) {
+          console.error('Failed to create GitHub issue:', err);
+        }
+      }
     }
 
     res.json(db.getTask(req.params.id));
