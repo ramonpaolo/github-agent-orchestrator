@@ -2,6 +2,7 @@ import { execSync, spawn } from 'child_process';
 import { Issue } from '../github';
 import path from 'path';
 import fs from 'fs';
+import { EventEmitter } from 'events';
 
 export interface OpenCodeResult {
   success: boolean;
@@ -293,4 +294,11 @@ export async function runOpenCodeForIssue(
 ): Promise<OpenCodeResult> {
   const opencode = new OpenCodeClient(workingDir);
   return await opencode.implementIssue(issue, additionalContext);
+}
+
+class LogEmitter extends EventEmitter {}
+const logEmitter = new LogEmitter();
+
+export function getLogEmitter(): LogEmitter {
+  return logEmitter;
 }
