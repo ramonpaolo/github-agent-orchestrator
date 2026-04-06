@@ -5,6 +5,13 @@ import { Issue, FileChange, PRResult, ProcessingResult, IssueStatus } from '../g
 import { GitHubClient } from '../github/client';
 import { TaskExecutor } from './executor';
 import { config } from '../config';
+import { getLogEmitter } from '../opencode/client';
+
+const logEmitter = getLogEmitter();
+
+function emitLog(line: string): void {
+  logEmitter.emit('log', line);
+}
 
 export class IssueOrchestrator {
   private client: GitHubClient;
@@ -20,7 +27,7 @@ export class IssueOrchestrator {
 
   async processIssue(issue: Issue): Promise<ProcessingResult> {
     const startTime = Date.now();
-    console.log(`\n🎯 Processing issue #${issue.number}: ${issue.title}`);
+    emitLog(`\n🎯 Processing issue #${issue.number}: ${issue.title}`);
 
     try {
       // Step 1: Mark as in progress
@@ -35,11 +42,12 @@ export class IssueOrchestrator {
       }
 
       // Step 3: Execute the task with OpenCode (which creates branch, implements, commits)
-      console.log('🤖 Executing task with OpenCode...');
+      emitLog('🤖 Executing task with OpenCode...');
       const execResult = await this.executor.execute(issue, this.dryRun);
       const { changes, branchName, error } = execResult;
 
       if (error) {
+        emitLog(`❌ Error from executor: ${error}`);
         throw new Error(error);
       }
 

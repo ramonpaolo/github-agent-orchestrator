@@ -1,2 +1,2 @@
-export { OpenCodeClient, runOpenCodeForIssue } from './client';
+export { OpenCodeClient, runOpenCodeForIssue, getLogEmitter } from './client';
 export type { OpenCodeResult } from './client';

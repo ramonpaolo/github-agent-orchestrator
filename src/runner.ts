@@ -6,6 +6,45 @@ import { db, ManagedRepo, ProcessingLog } from './web/database';
 import { config } from './config';
 import { v4 as uuidv4 } from 'uuid';
 import chalk from 'chalk';
+import { EventEmitter } from 'events';
+import { getLogEmitter } from './opencode/client';
+
+// Unified event emitter for session logs
+const sessionEmitter = new EventEmitter();
+
+// Store last N log lines for SSE clients
+const LOG_BUFFER_SIZE = 500;
+let logBuffer: string[] = [];
+
+export function emitLog(line: string): void {
+  const timestamp = new Date().toISOString();
+  const formatted = `[${timestamp}] ${line}`;
+  logBuffer.push(formatted);
+  if (logBuffer.length > LOG_BUFFER_SIZE) {
+    logBuffer = logBuffer.slice(-LOG_BUFFER_SIZE);
+  }
+  sessionEmitter.emit('log', formatted);
+  
+  // Also forward from opencode emitter
+  const opencodeEmitter = getLogEmitter();
+  opencodeEmitter.on('log', (msg: string) => {
+    const ts = new Date().toISOString();
+    const formatted = `[${ts}] ${msg}`;
+    logBuffer.push(formatted);
+    if (logBuffer.length > LOG_BUFFER_SIZE) {
+      logBuffer = logBuffer.slice(-LOG_BUFFER_SIZE);
+    }
+    sessionEmitter.emit('log', formatted);
+  });
+}
+
+export function getLogBuffer(): string[] {
+  return [...logBuffer];
+}
+
+export function clearLogBuffer(): void {
+  logBuffer = [];
+}
 
 interface RepoWorker {
   repoId: string;
@@ -17,10 +56,22 @@ interface RepoWorker {
   executor: TaskExecutor;
 }
 
+export interface SessionStatus {
+  active: boolean;
+  repoId?: string;
+  repoName?: string;
+  issueNumber?: number;
+  issueTitle?: string;
+  branchName?: string;
+  startedAt?: string;
+  progress?: string;
+}
+
 export class OrchestratorRunner {
   private workers: Map<string, RepoWorker> = new Map();
   private running: boolean = false;
   private pollTimers: Map<string, NodeJS.Timeout> = new Map();
+  private currentSession: SessionStatus = { active: false };
 
   async start(): Promise<void> {
     console.log(chalk.cyan('\n🤖 GitHub Agent Orchestrator - Runner\n'));
@@ -171,6 +222,17 @@ export class OrchestratorRunner {
     client: GitHubClient,
     orchestrator: IssueOrchestrator
   ): Promise<void> {
+    // Set session as active
+    this.currentSession = {
+      active: true,
+      repoId: repo.id,
+      repoName: repo.name,
+      issueNumber: issue.number,
+      issueTitle: issue.title,
+      startedAt: new Date().toISOString(),
+      progress: 'Starting...',
+    };
+
     try {
       const result = await orchestrator.processIssue(issue);
 
@@ -186,13 +248,26 @@ export class OrchestratorRunner {
 
       if (result.success) {
         console.log(chalk.green(`  ✓ [${repo.name}] Issue #${issue.number} completed`));
+        this.currentSession.progress = 'Completed!';
       } else if (result.message.includes('clarification')) {
         console.log(chalk.yellow(`  ⏸ [${repo.name}] Issue #${issue.number} needs clarification`));
+        this.currentSession.progress = 'Needs clarification';
       } else {
         console.log(chalk.red(`  ✗ [${repo.name}] Issue #${issue.number} failed: ${result.message}`));
+        this.currentSession.progress = `Failed: ${result.message}`;
       }
+
+      // Clear session after a delay
+      setTimeout(() => {
+        this.currentSession = { active: false };
+      }, 5000);
     } catch (error: any) {
       console.log(chalk.red(`  ✗ [${repo.name}] Error processing #${issue.number}: ${error.message}`));
+      this.currentSession.progress = `Error: ${error.message}`;
+      
+      setTimeout(() => {
+        this.currentSession = { active: false };
+      }, 5000);
     }
   }
 
@@ -202,6 +277,10 @@ export class OrchestratorRunner {
       workers: this.workers.size,
       repos: Array.from(this.workers.keys()),
     };
+  }
+
+  getSessionStatus(): SessionStatus {
+    return this.currentSession;
   }
 }
 
