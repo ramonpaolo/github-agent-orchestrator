@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import * as fs from 'fs';
 
 dotenv.config();
 
@@ -39,7 +40,7 @@ export function validateConfig(): boolean {
   }
   if (!config.github.repoPath) {
     errors.push('GITHUB_REPO_PATH is required');
-  } else if (!require('fs').existsSync(config.github.repoPath)) {
+  } else if (!fs.existsSync(config.github.repoPath)) {
     errors.push(`Repository path does not exist: ${config.github.repoPath}`);
   }
 

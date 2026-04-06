@@ -185,6 +185,7 @@ export class OpenCodeClient {
         const result = await createOpencode({
           port: 4096,
           hostname: '127.0.0.1',
+          timeout: 30000,
           // config: {
           //   model: config.agent.model,
           // },
@@ -282,18 +283,27 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
               }
             } catch (e) {
               if (!completed) {
-                errorMsg = e instanceof Error ? e.message : 'Unknown error';
+                completed = true;
+                errorMsg = e instanceof Error ? e.message : String(e);
                 emitLog(`❌ Stream error: ${errorMsg}`);
+                emitLog(`❌ Stream error type: ${typeof e}, stack: ${e instanceof Error ? e.stack : String(e)}`);
               }
             }
           })();
 
-          await client.session.prompt({
-            path: { id: sessionId },
-            body: {
-              parts: [{ type: 'text', text: promptWithInstructions }]
-            }
-          });
+          try {
+            emitLog('📤 Sending prompt to session...');
+            await client.session.prompt({
+              path: { id: sessionId },
+              body: {
+                parts: [{ type: 'text', text: promptWithInstructions }]
+              }
+            });
+            emitLog('📤 Prompt sent successfully');
+          } catch (promptError) {
+            emitLog(`❌ Prompt error: ${promptError instanceof Error ? promptError.message : String(promptError)}`);
+            throw promptError;
+          }
 
           const cleanup = async () => {
             if (sessionId) {
@@ -301,7 +311,7 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
             }
             try {
               result.server.close();
-            } catch {}
+            } catch { }
           };
 
           const timeout = setTimeout(() => {
@@ -316,22 +326,26 @@ When you complete the implementation, use the bash tool to run: git add -A && gi
 
           const checkCompletion = setInterval(async () => {
             if (completed) {
+              emitLog(`✅ CheckCompletion firing: success=${success}, errorMsg=${errorMsg}`);
               clearInterval(checkCompletion);
               clearTimeout(timeout);
               await cleanup();
-              resolve({ success, error: errorMsg, changedFiles });
+              resolve({ success, error: errorMsg, changedFiles: this.detectChangedFiles() });
             }
           }, 1000);
 
         } catch (error: any) {
-          emitLog(`❌ OpenCode error: ${error.message}`);
-          errorMsg = error.message;
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          emitLog(`❌ OpenCode error: ${errorMessage}`);
+          emitLog(`❌ OpenCode error type: ${typeof error}, stack: ${error instanceof Error ? error.stack : 'N/A'}`);
+          errorMsg = errorMessage;
+          completed = true;
           if (sessionId) {
             await this.deleteSession(client, sessionId);
           }
           try {
             result.server.close();
-          } catch {}
+          } catch { }
           resolve({ success: false, error: errorMsg, changedFiles: [] });
         }
 
@@ -382,7 +396,7 @@ ${additionalContext ? `## Additional Context\n${additionalContext}\n` : ''}
 
   private detectChangedFiles(): string[] {
     try {
-      const output = execSync('git status --porcelain', {
+      const output = execSync('git diff --name-only origin/main..HEAD', {
         cwd: this.workingDir,
         encoding: 'utf8',
       }).trim();
@@ -392,7 +406,6 @@ ${additionalContext ? `## Additional Context\n${additionalContext}\n` : ''}
       return output
         .split('\n')
         .filter(line => line.trim())
-        .map(line => line.substring(3).trim())
         .filter(file =>
           !file.includes('.opencode-prompt.md') &&
           !file.startsWith('solutions/') &&
