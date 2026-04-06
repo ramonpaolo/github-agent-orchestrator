@@ -211,24 +211,10 @@ class DatabaseManager {
     return stmt.all(limit) as (ProcessingLog & { repoName: string })[];
   }
 
-  // Stats
-  getRepoStats(repoId: string): { processed: number; success: number; failed: number; blocked: number } {
-    const stmt = this.db.prepare(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
-        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
-        SUM(CASE WHEN status = 'blocked' THEN 1 ELSE 0 END) as blocked
-      FROM processing_logs
-      WHERE repoId = ?
-    `);
-    const row = stmt.get(repoId) as any;
-    return {
-      processed: row.total || 0,
-      success: row.success || 0,
-      failed: row.failed || 0,
-      blocked: row.blocked || 0,
-    };
+  // Task operations
+  getAllTasks(): Task[] {
+    const stmt = this.db.prepare('SELECT * FROM tasks ORDER BY createdAt DESC');
+    return stmt.all() as Task[];
   }
 
   getTasksByRepo(repoId: string): Task[] {
@@ -239,11 +225,6 @@ class DatabaseManager {
   getTasksByStatus(status: TaskStatus): Task[] {
     const stmt = this.db.prepare('SELECT * FROM tasks WHERE status = ? ORDER BY createdAt DESC');
     return stmt.all(status) as Task[];
-  }
-
-  getAllTasks(): Task[] {
-    const stmt = this.db.prepare('SELECT * FROM tasks ORDER BY createdAt DESC');
-    return stmt.all() as Task[];
   }
 
   getTask(id: string): Task | null {
@@ -257,11 +238,22 @@ class DatabaseManager {
       INSERT INTO tasks (id, repoId, title, description, status, priority, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(task.id, task.repoId, task.title, task.description, task.status, task.priority, now, now);
+    
+    stmt.run(
+      task.id,
+      task.repoId,
+      task.title,
+      task.description,
+      task.status,
+      task.priority,
+      now,
+      now
+    );
+    
     return { ...task, createdAt: now, updatedAt: now };
   }
 
-  updateTask(id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): boolean {
+  updateTask(id: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>): boolean {
     const task = this.getTask(id);
     if (!task) return false;
 
@@ -288,20 +280,40 @@ class DatabaseManager {
     return result.changes > 0;
   }
 
-  moveTask(id: string, status: TaskStatus): boolean {
+  deleteTask(id: string): boolean {
+    const stmt = this.db.prepare('DELETE FROM tasks WHERE id = ?');
+    const result = stmt.run(id);
+    return result.changes > 0;
+  }
+
+  moveTask(id: string, newStatus: TaskStatus): boolean {
     const task = this.getTask(id);
     if (!task) return false;
 
     const now = new Date().toISOString();
     const stmt = this.db.prepare('UPDATE tasks SET status = ?, updatedAt = ? WHERE id = ?');
-    const result = stmt.run(status, now, id);
+    const result = stmt.run(newStatus, now, id);
     return result.changes > 0;
   }
 
-  deleteTask(id: string): boolean {
-    const stmt = this.db.prepare('DELETE FROM tasks WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
+  // Stats
+  getRepoStats(repoId: string): { processed: number; success: number; failed: number; blocked: number } {
+    const stmt = this.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success,
+        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+        SUM(CASE WHEN status = 'blocked' THEN 1 ELSE 0 END) as blocked
+      FROM processing_logs
+      WHERE repoId = ?
+    `);
+    const row = stmt.get(repoId) as any;
+    return {
+      processed: row.total || 0,
+      success: row.success || 0,
+      failed: row.failed || 0,
+      blocked: row.blocked || 0,
+    };
   }
 
   close(): void {
